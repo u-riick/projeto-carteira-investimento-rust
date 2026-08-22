@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar | Sua carteira</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { color-scheme: dark; }
+        body { font-family: 'Manrope', sans-serif; background: #071312; }
+        .mono { font-family: 'DM Mono', monospace; }
+        .grid-lines { background-image: linear-gradient(rgba(154, 205, 189, .045) 1px, transparent 1px), linear-gradient(90deg, rgba(154, 205, 189, .045) 1px, transparent 1px); background-size: 36px 36px; }
+        .panel { background: rgba(13, 31, 28, .78); border: 1px solid rgba(158, 219, 195, .13); }
+        .lift { animation: lift-in .55s ease both; }
+        @keyframes lift-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @media (prefers-reduced-motion: reduce) { .lift { animation: none; } }
+    </style>
+</head>
+<body class="grid-lines min-h-screen text-[#e7f1eb]">
+    <main class="mx-auto flex min-h-screen w-full max-w-7xl items-center px-5 py-8 lg:px-8">
+        <div class="grid w-full items-center gap-12 lg:grid-cols-[1fr_420px] lg:gap-24">
+            <section class="lift hidden lg:block">
+                <p class="mono mb-4 text-xs font-medium uppercase tracking-[.3em] text-[#c9f56d]">Seu painel pessoal de investimentos</p>
+                <h1 class="max-w-xl text-5xl font-extrabold leading-[1.05] tracking-tight text-[#e7f1eb] xl:text-6xl">Invista com mais clareza.</h1>
+                <p class="mt-6 max-w-md text-base leading-7 text-[#9edbc3]/65">Acompanhe seus ativos, registre seus aportes e veja sua carteira evoluir.</p>
+            </section>
+
+            <section class="lift panel rounded-2xl p-6 shadow-2xl shadow-black/20 sm:p-8" style="animation-delay: .08s">
+                <div class="mb-8">
+                    <p class="mono text-xs font-medium uppercase tracking-[.25em] text-[#c9f56d]">Bem-vindo</p>
+                    <h2 class="mt-2 text-2xl font-extrabold tracking-tight">Acesse sua carteira</h2>
+                    <p class="mt-2 text-sm leading-6 text-[#9edbc3]/60">Entre para consultar suas posições e registrar um novo aporte.</p>
+                </div>
+
+                <p id="login-error" class="mb-5 hidden rounded-lg border border-[#ff8f85]/25 bg-[#ff8f85]/[.08] px-4 py-3 text-sm leading-5 text-[#ffb0a8]" role="alert"></p>
+                <form id="login-form" method="POST" action="/login" class="space-y-5">
+                    <label class="block">
+                        <span class="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9edbc3]/60">Usuário</span>
+                        <input type="text" name="username" required autocomplete="username" autofocus placeholder="Digite seu usuário" class="w-full rounded-lg border border-[#9edbc3]/15 bg-[#091916] px-4 py-3 text-sm text-[#e7f1eb] outline-none transition focus:border-[#c9f56d]/70 focus:ring-2 focus:ring-[#c9f56d]/10 placeholder:text-[#9edbc3]/25">
+                    </label>
+                    <label class="block">
+                        <span class="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9edbc3]/60">Senha</span>
+                        <div class="relative">
+                            <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="Digite sua senha" class="w-full rounded-lg border border-[#9edbc3]/15 bg-[#091916] px-4 py-3 pr-20 text-sm text-[#e7f1eb] outline-none transition focus:border-[#c9f56d]/70 focus:ring-2 focus:ring-[#c9f56d]/10 placeholder:text-[#9edbc3]/25">
+                            <button id="toggle-password" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 px-1 text-xs font-bold text-[#9edbc3]/55 transition hover:text-[#c9f56d]" aria-label="Mostrar senha">Mostrar</button>
+                        </div>
+                    </label>
+                    <button id="submit-button" type="submit" class="w-full rounded-lg bg-[#c9f56d] px-4 py-3 text-sm font-extrabold text-[#10200f] transition hover:bg-[#d9ff8a] focus:outline-none focus:ring-2 focus:ring-[#c9f56d]/50 disabled:cursor-wait disabled:opacity-60">Entrar</button>
+                </form>
+                <p class="mt-6 text-center text-xs leading-5 text-[#9edbc3]/45">Ainda não possui uma conta? O primeiro acesso cria seu usuário.</p>
+            </section>
+        </div>
+    </main>
+    <script>
+        const loginForm = document.querySelector('#login-form');
+        const loginError = document.querySelector('#login-error');
+        const password = document.querySelector('#password');
+        const togglePassword = document.querySelector('#toggle-password');
+        const submitButton = document.querySelector('#submit-button');
+
+        togglePassword.addEventListener('click', () => {
+            const isPassword = password.type === 'password';
+            password.type = isPassword ? 'text' : 'password';
+            togglePassword.textContent = isPassword ? 'Ocultar' : 'Mostrar';
+            togglePassword.setAttribute('aria-label', `${isPassword ? 'Ocultar' : 'Mostrar'} senha`);
+        });
+
+        loginForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            loginError.classList.add('hidden');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Entrando...';
+
+            try {
+                const response = await fetch(loginForm.action, {
+                    method: 'POST',
+                    body: new URLSearchParams(new FormData(loginForm)),
+                    credentials: 'same-origin',
+                });
+
+                if (response.ok && response.redirected) {
+                    window.location.assign(response.url);
+                    return;
+                }
+
+                const result = await response.json().catch(() => ({}));
+                loginError.textContent = result.error || 'Não foi possível entrar.';
+                loginError.classList.remove('hidden');
+            } catch (_) {
+                loginError.textContent = 'Não foi possível conectar ao servidor.';
+                loginError.classList.remove('hidden');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Entrar';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Minha carteira | Ativos</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+	<style>
+		:root { color-scheme: dark; }
+		body { font-family: 'Manrope', sans-serif; background: #071312; }
+		.mono { font-family: 'DM Mono', monospace; }
+		.grid-lines { background-image: linear-gradient(rgba(154, 205, 189, .045) 1px, transparent 1px), linear-gradient(90deg, rgba(154, 205, 189, .045) 1px, transparent 1px); background-size: 36px 36px; }
+		.panel { background: rgba(13, 31, 28, .78); border: 1px solid rgba(158, 219, 195, .13); }
+		.lift { animation: lift-in .55s ease both; }
+		@keyframes lift-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+		@media (prefers-reduced-motion: reduce) { .lift { animation: none; } }
+	</style>
+</head>
+<body class="grid-lines min-h-screen text-[#e7f1eb]">
+	<header class="border-b border-[#9edbc3]/10 bg-[#071312]/90 backdrop-blur-md">
+		<div class="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 lg:px-8">
+			<p class="text-sm font-semibold text-[#9edbc3]/70">Olá, <strong class="text-[#e7f1eb] uppercase">{{ user.username() }}</strong></p>
+			<a href="/logout" class="rounded-lg border border-[#9edbc3]/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#c9f56d] transition hover:border-[#c9f56d]/60 hover:bg-[#c9f56d]/10">Sair</a>
+		</div>
+	</header>
+
+	<main class="mx-auto max-w-7xl px-5 py-10 lg:px-8">
+		<div class="lift mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+			<div><p class="mono mb-2 text-xs uppercase tracking-[.25em] text-[#c9f56d]">Visão geral</p><h1 class="text-3xl font-extrabold tracking-tight sm:text-4xl">Sua carteira</h1><p class="mt-2 text-sm text-[#9edbc3]/65">Acompanhe suas aplicações e faça seu próximo aporte.</p></div>
+		</div>
+
+		<section class="lift grid gap-3 sm:grid-cols-3" style="animation-delay: .08s" aria-label="Resumo da carteira">
+			<div class="panel rounded-2xl p-5"><p class="text-xs font-bold uppercase tracking-wider text-[#9edbc3]/55">Ativos na carteira</p><p class="mono mt-3 text-3xl text-[#e7f1eb]">{{ owned_assets.len() }}</p><p class="mt-1 text-xs text-[#9edbc3]/55">ativos diferentes</p></div>
+			<div class="panel rounded-2xl p-5"><p class="text-xs font-bold uppercase tracking-wider text-[#9edbc3]/55">Valor investido</p><p id="invested-total" class="mono mt-3 text-3xl text-[#e7f1eb]">R$ 0,00</p><p class="mt-1 text-xs text-[#9edbc3]/55">custo dos aportes</p></div>
+			<div class="rounded-2xl border border-[#c9f56d]/25 bg-[#c9f56d]/[.09] p-5"><p class="text-xs font-bold uppercase tracking-wider text-[#c9f56d]/70">Resultado estimado</p><p id="result-total" class="mono mt-3 text-3xl text-[#c9f56d]">R$ 0,00</p><p class="mt-1 text-xs text-[#c9f56d]/60">valorização atual</p></div>
+		</section>
+
+		<div class="mt-10 grid gap-8 lg:grid-cols-[1fr_360px]">
+			<section class="lift" style="animation-delay: .16s">
+				<div class="mb-4 flex items-center justify-between"><div><p class="mono text-xs uppercase tracking-[.2em] text-[#9edbc3]/50">Aplicações</p><h2 class="mt-1 text-xl font-bold">Meus investimentos</h2></div><span class="rounded-full border border-[#9edbc3]/15 px-3 py-1 text-xs text-[#9edbc3]/60">{{ owned_assets.len() }} ativos</span></div>
+				{% if owned_assets.len() == 0 %}
+				<div class="panel rounded-2xl p-10 text-center"><p class="text-lg font-bold">Sua carteira ainda está vazia</p><p class="mt-2 text-sm text-[#9edbc3]/60">Escolha um ativo ao lado para começar.</p></div>
+				{% else %}
+				<div class="space-y-3">
+					{% for asset in owned_assets %}
+					<article data-result="{{ asset.value_delta }}" class="panel rounded-2xl p-5 transition hover:border-[#9edbc3]/30"><div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div class="flex items-center gap-3"><span class="flex h-11 w-11 items-center justify-center rounded-xl bg-[#9edbc3]/10 text-lg font-bold text-[#c9f56d]">{{ asset.name.chars().next().unwrap_or('?') }}</span><div><h3 class="font-bold">{{ asset.name }}</h3><p class="mono mt-1 text-xs text-[#9edbc3]/55">{{ asset.quantity_owned }} unidades</p></div></div><div class="text-left sm:text-right"><p class="mono text-lg font-medium">R$ {{ "{:.2}"|format(asset.unit_value) }}</p><p class="mono mt-1 text-xs {% if asset.value_delta >= 0.0 %}text-[#c9f56d]{% else %}text-[#ff8f85]{% endif %}">{% if asset.value_delta >= 0.0 %}+{% endif %} R$ {{ "{:.2}"|format(asset.value_delta) }}</p></div></div><details class="mt-4 border-t border-[#9edbc3]/10 pt-3"><summary class="cursor-pointer text-xs font-bold uppercase tracking-wider text-[#9edbc3]/55 hover:text-[#c9f56d]">Ver histórico de compras</summary><div class="mt-3 space-y-2">{% for purchase in asset.purchase_history.0 %}<div data-cost="{{ purchase.bought_for * purchase.quantity_bought }}" class="flex justify-between text-xs text-[#9edbc3]/65"><span>{{ purchase.quantity_bought }} un. a R$ {{ "{:.2}"|format(purchase.bought_for) }} <span class="ml-2 text-[#9edbc3]/45">{{ purchase.bought_at|human_datetime }}</span></span><span class="mono {% if purchase.value_delta >= 0.0 %}text-[#c9f56d]{% else %}text-[#ff8f85]{% endif %}">{% if purchase.value_delta >= 0.0 %}+{% endif %} R$ {{ "{:.2}"|format(purchase.value_delta) }}</span></div>{% endfor %}</div></details></article>
+					{% endfor %}
+				</div>
+				{% endif %}
+			</section>
+
+			<aside id="novo-investimento" class="lift panel h-fit rounded-2xl p-6" style="animation-delay: .24s"><div class="mb-6"><p class="mono text-xs uppercase tracking-[.2em] text-[#c9f56d]">Aporte</p><h2 class="mt-1 text-xl font-bold">Novo investimento</h2><p class="mt-2 text-xs leading-5 text-[#9edbc3]/60">Registre uma compra e ela aparecerá na sua carteira.</p></div><form method="POST" action="/assets" class="space-y-4"><label class="block"><span class="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9edbc3]/60">Ativo</span><select id="asset-select" name="asset_id" required class="w-full rounded-lg border border-[#9edbc3]/15 bg-[#091916] px-3 py-3 text-sm outline-none focus:border-[#c9f56d]/70">{% for asset in available_assets %}<option value="{{ asset.id }}" data-value="{{ asset.unit_value }}">{{ asset.name }}</option>{% endfor %}</select></label><label class="block"><span class="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9edbc3]/60">Preço por unidade</span><input id="unit-value" name="unit_value" type="number" step="0.01" min="0.01" required class="mono w-full rounded-lg border border-[#9edbc3]/15 bg-[#091916] px-3 py-3 text-sm outline-none focus:border-[#c9f56d]/70"></label><label class="block"><span class="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9edbc3]/60">Quantidade</span><input id="quantity" name="quantity" type="number" step="0.0001" min="0.0001" required placeholder="0,00" class="mono w-full rounded-lg border border-[#9edbc3]/15 bg-[#091916] px-3 py-3 text-sm outline-none placeholder:text-[#9edbc3]/25 focus:border-[#c9f56d]/70"></label><div class="flex items-center justify-between border-t border-[#9edbc3]/10 pt-4 text-sm"><span class="text-[#9edbc3]/60">Total do aporte</span><strong id="purchase-total" class="mono text-[#c9f56d]">R$ 0,00</strong></div><button type="submit" class="w-full rounded-lg bg-[#c9f56d] px-4 py-3 text-sm font-extrabold text-[#10200f] transition hover:bg-[#d9ff8a]">Adicionar à carteira</button></form></aside>
+		</div>
+	</main>
+	<script>
+		const select = document.querySelector('#asset-select');
+		const unitValue = document.querySelector('#unit-value');
+		const quantity = document.querySelector('#quantity');
+		const purchaseTotal = document.querySelector('#purchase-total');
+		const formatMoney = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+		const updatePurchase = () => { const total = (Number(unitValue.value) || 0) * (Number(quantity.value) || 0); purchaseTotal.textContent = formatMoney(total); };
+		const syncAssetValue = () => { unitValue.value = select.selectedOptions[0]?.dataset.value || ''; updatePurchase(); };
+		select?.addEventListener('change', syncAssetValue); unitValue?.addEventListener('input', updatePurchase); quantity?.addEventListener('input', updatePurchase); syncAssetValue();
+		let invested = 0; let result = 0;
+		document.querySelectorAll('[data-cost]').forEach(item => invested += Number(item.dataset.cost) || 0);
+		document.querySelectorAll('[data-result]').forEach(item => result += Number(item.dataset.result) || 0);
+		document.querySelector('#invested-total').textContent = formatMoney(invested); document.querySelector('#result-total').textContent = formatMoney(result);
+	</script>
+</body>
+</html>
