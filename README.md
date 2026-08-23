@@ -92,7 +92,7 @@ cd projeto-carteira-investimento-rust
 
 ### ⚙️ Passo 2: Configure o banco de dados
 
-**Opção B: PostgreSQL local**
+**PostgreSQL local**
 
 Certifique-se que PostgreSQL está instalado e rodando com o banco padrão `postgres`.
 
@@ -101,7 +101,8 @@ Certifique-se que PostgreSQL está instalado e rodando com o banco padrão `post
 Crie um arquivo `.env` na raiz do projeto:
 
 ```env
-DATABASE_URL=postgres://postgres:SUA-SENHA@localhost:5432/postgres
+DATABASE_URL=postgres://postgres:sua_senha_postgres@localhost:5432/postgres
+POSTGRES_PASSWORD = sua_senha_postgres
 ```
 
 ### ⚙️ Passo 4: Execute as migrations
